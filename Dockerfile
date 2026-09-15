@@ -19,4 +19,6 @@ COPY --from=builder /app/package*.json ./
 ENV NODE_ENV=production
 RUN npm ci --ignore-scripts --omit=dev
 
-ENTRYPOINT ["node", "dist/index.js"]
+EXPOSE 3000
+
+ENTRYPOINT ["node", "dist/index.js", "--http", "3000"]
