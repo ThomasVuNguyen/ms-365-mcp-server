@@ -606,7 +606,9 @@
     "method": "get",
     "toolName": "list-drives",
     "presets": ["files", "onedrive", "personal"],
-    "scopes": ["Files.Read"]
+    "scopes": ["Files.Read"],
+    "unsupportedQueryOptions": ["skip", "count", "search", "skiptoken"],
+    "llmTip": "Lists all drives accessible to the current user. Returns id, name, driveType, webUrl, owner. Does NOT support $count, $skip, $search, or $skiptoken — use only $select, $top, $filter, $orderby, and $expand."
   },
   {
     "pathPattern": "/drives/{drive-id}/items/{driveItem-id}/delta()",
@@ -748,7 +750,8 @@
     "presets": ["files", "onedrive", "personal", "search"],
     "scopes": ["Files.Read"],
     "skipEncoding": ["q"],
-    "llmTip": "Searches for files in a drive by name or content. The q parameter searches file names, metadata, and file content. Returns matching driveItems with id, name, webUrl, size, lastModifiedDateTime. Use list-drives first to get the drive-id."
+    "unsupportedQueryOptions": ["skip", "count"],
+    "llmTip": "Searches for files in a drive by name or content. The q parameter searches file names, metadata, and file content. Returns matching driveItems with id, name, webUrl, size, lastModifiedDateTime. Use list-drives first to get the drive-id. Does NOT support $skip or $count — pagination is cursor-based ($skiptoken only). For $select, use driveItem property names (id, name, webUrl, size, lastModifiedDateTime, createdBy, parentReference) — do NOT use 'file' (which is a driveItem facet, not a selectable property on the search function's drive scope)."
   },
   {
     "pathPattern": "/drives/{drive-id}/items/{driveItem-id}/workbook/worksheets/{workbookWorksheet-id}/charts/add",

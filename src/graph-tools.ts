@@ -93,6 +93,7 @@ interface EndpointConfig {
   contentType?: string;
   acceptType?: string; // Custom Accept header for endpoints returning non-JSON content (e.g., text/vtt)
   readOnly?: boolean; // When true, allow this endpoint in read-only mode even if method is not GET
+  unsupportedQueryOptions?: string[]; // OData query options (without $) that this endpoint rejects, e.g. ["skip","count"]
   presets?: string[]; // Presets this endpoint belongs to (mail, outlook, personal, ...)
   // JSON Schema for the request body of an endpoint that Microsoft has NOT published
   // in its OpenAPI metadata. Consumed at generate time by bin/modules/simplified-openapi.mjs
@@ -2096,6 +2097,21 @@ async function executeGraphTool(
     clampTopQueryParam(queryParams);
     const searchError = normalizeSearchQueryParam(queryParams, tool.path, tool.alias);
     if (searchError) return searchError;
+
+    // Strip OData query options that the endpoint explicitly declares as unsupported.
+    // Without this, the OData fallback (further up) would forward any OData-named
+    // parameter the LLM sends, even when the Graph endpoint rejects it with 400.
+    if (config?.unsupportedQueryOptions) {
+      for (const opt of config.unsupportedQueryOptions) {
+        const key = `$${opt}`;
+        if (queryParams[key] !== undefined) {
+          logger.info(
+            `Stripping unsupported query option ${key} for ${tool.alias} (declared in endpoints.json unsupportedQueryOptions)`
+          );
+          delete queryParams[key];
+        }
+      }
+    }
 
     const preferValues: string[] = [];
 
