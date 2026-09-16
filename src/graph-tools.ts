@@ -1940,7 +1940,15 @@ async function executeGraphTool(
           }
 
           case 'Query':
-            if (paramValue !== '' && paramValue != null) {
+            // Skip empty-ish values that would add noise or break endpoints.
+            // false, 0, and [] are OData defaults that should not be sent.
+            if (
+              paramValue !== '' &&
+              paramValue != null &&
+              paramValue !== false &&
+              !(paramValue === 0 && isOdataParam) &&
+              !(Array.isArray(paramValue) && paramValue.length === 0)
+            ) {
               queryParams[fixedParamName] = `${paramValue}`;
             }
             break;
@@ -1997,8 +2005,21 @@ async function executeGraphTool(
       } else if (isOdataParam) {
         // Fallback: OData param recognised by name but absent from generated client's parameter
         // list — forward it as a query param rather than silently dropping it.
-        queryParams[fixedParamName] = `${paramValue}`;
-        logger.info(`OData param fallback: forwarded ${fixedParamName}=${paramValue}`);
+        // Skip no-op default values: false booleans ($count=false), zero offsets ($skip=0),
+        // empty arrays ($expand=[]), and empty strings are all OData defaults that should
+        // never be forwarded — many endpoints reject the query option entirely, even with
+        // a default value.
+        if (
+          paramValue === false ||
+          paramValue === 0 ||
+          paramValue === '' ||
+          (Array.isArray(paramValue) && paramValue.length === 0)
+        ) {
+          logger.info(`OData param fallback: skipping no-op ${fixedParamName}=${JSON.stringify(paramValue)}`);
+        } else {
+          queryParams[fixedParamName] = `${paramValue}`;
+          logger.info(`OData param fallback: forwarded ${fixedParamName}=${paramValue}`);
+        }
       } else if (
         bodyShape &&
         (hasOwn(bodyShape, paramName) || hasOwn(bodyShape, camelCaseParamName)) &&

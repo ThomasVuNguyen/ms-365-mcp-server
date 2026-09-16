@@ -630,7 +630,9 @@
     "method": "get",
     "toolName": "list-folder-files",
     "presets": ["files", "onedrive", "personal"],
-    "scopes": [["Files.Read"], ["Sites.Selected"]]
+    "scopes": [["Files.Read"], ["Sites.Selected"]],
+    "unsupportedQueryOptions": ["count", "skip", "search"],
+    "llmTip": "Lists children of a folder. Use list-drives to get drive-id, then get-drive-root-item or get-drive-item to get driveItem-id. Does NOT support $count, $skip, or $search — use $skiptoken for pagination. Supports $select, $top, $filter, $orderby, $expand."
   },
   {
     "pathPattern": "/drives/{drive-id}/items/{driveItem-id}",
